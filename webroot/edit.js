@@ -2376,45 +2376,48 @@ class PageController {
         let originalImage = drawingItem.originator.getImageClone();
 
         let rectangle = this.getToolRectangle();
-        if (rectangle.width != rectangle.height) {
-            console.log('Rotate is only available for square selections.');
-            let message = `rotate selection clockwise x: ${rectangle.x} y: ${rectangle.y} width: ${rectangle.width} height: ${rectangle.height}, cannot rotate non-square selection`;
-            this.history.log(message, {
-                action: 'rotate selection clockwise',
-                imageHandle: historyImageHandle,
-                sameImage: true,
-                x: rectangle.x,
-                y: rectangle.y,
-                width: rectangle.width,
-                height: rectangle.height,
-                image: originalImage.pixels,
-            });
-            return;
+        
+        // Expand selection to be square by using the larger dimension
+        let size = Math.max(rectangle.width, rectangle.height);
+        let newX = rectangle.x;
+        let newY = rectangle.y;
+        
+        // Adjust position to keep the selection centered
+        if (rectangle.width < size) {
+            newX = rectangle.x - Math.floor((size - rectangle.width) / 2);
         }
+        if (rectangle.height < size) {
+            newY = rectangle.y - Math.floor((size - rectangle.height) / 2);
+        }
+
+        // Ensure the expanded selection stays within image bounds
+        if (newX < 0) newX = 0;
+        if (newY < 0) newY = 0;
+        if (newX + size > originalImage.width) newX = originalImage.width - size;
+        if (newY + size > originalImage.height) newY = originalImage.height - size;
 
         // First clear the selected area
         let image = originalImage.clone();
-        for (let x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
-            for (let y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
+        for (let x = newX; x < newX + size; x++) {
+            for (let y = newY; y < newY + size; y++) {
                 image.pixels[y][x] = 0;
             }
         }
 
         // Then apply rotation
-        let cropImage = originalImage.crop(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
+        let cropImage = originalImage.crop(newX, newY, size, size);
         let rotatedImage = cropImage.rotateCW();
-        image = image.overlay(rotatedImage, rectangle.x, rectangle.y);
+        image = image.overlay(rotatedImage, newX, newY);
         let sameImage = image.isEqualTo(originalImage);
 
-        let message = `rotate selection clockwise, x: ${rectangle.x} y: ${rectangle.y} width: ${rectangle.width} height: ${rectangle.height}`;
+        let message = `rotate selection clockwise, x: ${newX} y: ${newY} size: ${size}`;
         this.history.log(message, {
             action: 'rotate selection clockwise',
             imageHandle: historyImageHandle,
             sameImage: sameImage,
-            x: rectangle.x,
-            y: rectangle.y,
-            width: rectangle.width,
-            height: rectangle.height,
+            x: newX,
+            y: newY,
+            size: size,
             image: image.pixels,
         });
 
@@ -2425,6 +2428,13 @@ class PageController {
         }
         drawingItem.caretaker.saveState(drawingItem.originator, message);
         drawingItem.originator.setImage(image);
+
+        // Update selection rectangle to match the expanded square
+        drawingItem.selectRectangle.x0 = newX;
+        drawingItem.selectRectangle.y0 = newY;
+        drawingItem.selectRectangle.x1 = newX + size - 1;
+        drawingItem.selectRectangle.y1 = newY + size - 1;
+
         this.updateDrawCanvas();
         this.hideToolPanel();
     }
@@ -2471,45 +2481,48 @@ class PageController {
         let originalImage = drawingItem.originator.getImageClone();
 
         let rectangle = this.getToolRectangle();
-        if (rectangle.width != rectangle.height) {
-            console.log('Rotate is only available for square selections.');
-            let message = `rotate selection counter-clockwise x: ${rectangle.x} y: ${rectangle.y} width: ${rectangle.width} height: ${rectangle.height}, cannot rotate non-square selection`;
-            this.history.log(message, {
-                action: 'rotate selection counter-clockwise',
-                imageHandle: historyImageHandle,
-                sameImage: true,
-                x: rectangle.x,
-                y: rectangle.y,
-                width: rectangle.width,
-                height: rectangle.height,
-                image: originalImage.pixels,
-            });
-            return;
+        
+        // Expand selection to be square by using the larger dimension
+        let size = Math.max(rectangle.width, rectangle.height);
+        let newX = rectangle.x;
+        let newY = rectangle.y;
+        
+        // Adjust position to keep the selection centered
+        if (rectangle.width < size) {
+            newX = rectangle.x - Math.floor((size - rectangle.width) / 2);
         }
+        if (rectangle.height < size) {
+            newY = rectangle.y - Math.floor((size - rectangle.height) / 2);
+        }
+
+        // Ensure the expanded selection stays within image bounds
+        if (newX < 0) newX = 0;
+        if (newY < 0) newY = 0;
+        if (newX + size > originalImage.width) newX = originalImage.width - size;
+        if (newY + size > originalImage.height) newY = originalImage.height - size;
 
         // First clear the selected area
         let image = originalImage.clone();
-        for (let x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
-            for (let y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
+        for (let x = newX; x < newX + size; x++) {
+            for (let y = newY; y < newY + size; y++) {
                 image.pixels[y][x] = 0;
             }
         }
 
         // Then apply rotation
-        let cropImage = originalImage.crop(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
+        let cropImage = originalImage.crop(newX, newY, size, size);
         let rotatedImage = cropImage.rotateCCW();
-        image = image.overlay(rotatedImage, rectangle.x, rectangle.y);
+        image = image.overlay(rotatedImage, newX, newY);
         let sameImage = image.isEqualTo(originalImage);
 
-        let message = `rotate selection counter-clockwise, x: ${rectangle.x} y: ${rectangle.y} width: ${rectangle.width} height: ${rectangle.height}`;
+        let message = `rotate selection counter-clockwise, x: ${newX} y: ${newY} size: ${size}`;
         this.history.log(message, {
             action: 'rotate selection counter-clockwise',
             imageHandle: historyImageHandle,
             sameImage: sameImage,
-            x: rectangle.x,
-            y: rectangle.y,
-            width: rectangle.width,
-            height: rectangle.height,
+            x: newX,
+            y: newY,
+            size: size,
             image: image.pixels,
         });
 
@@ -2520,6 +2533,13 @@ class PageController {
         }
         drawingItem.caretaker.saveState(drawingItem.originator, message);
         drawingItem.originator.setImage(image);
+
+        // Update selection rectangle to match the expanded square
+        drawingItem.selectRectangle.x0 = newX;
+        drawingItem.selectRectangle.y0 = newY;
+        drawingItem.selectRectangle.x1 = newX + size - 1;
+        drawingItem.selectRectangle.y1 = newY + size - 1;
+
         this.updateDrawCanvas();
         this.hideToolPanel();
     }
