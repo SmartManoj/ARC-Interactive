@@ -486,6 +486,13 @@ class PageController {
             if (event.code === 'KeyF') {
                 this.keyboardShortcutPickTool('tool_fill');
             }
+            if (event.code === 'KeyR') {
+                if (event.shiftKey) {
+                    this.rotateCCW();
+                } else {
+                    this.rotateCW();
+                }
+            }
             if (event.code === 'ArrowUp') {
                 this.moveUp();
             }
