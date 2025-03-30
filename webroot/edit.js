@@ -2497,6 +2497,14 @@ class PageController {
         let image = originalImage.moveLeft(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
         let sameImage = image.isEqualTo(originalImage);
 
+        // Update selection rectangle coordinates
+        let newX = rectangle.x - 1;
+        if (newX < 0) {
+            newX = 0;
+        }
+        drawingItem.selectRectangle.x0 = newX;
+        drawingItem.selectRectangle.x1 = newX + rectangle.width - 1;
+
         let message = `move left x: ${rectangle.x} y: ${rectangle.y} width: ${rectangle.width} height: ${rectangle.height}`;
         this.history.log(message, {
             action: 'move left',
@@ -2528,6 +2536,14 @@ class PageController {
         let rectangle = this.getToolRectangle();
         let image = originalImage.moveRight(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
         let sameImage = image.isEqualTo(originalImage);
+
+        // Update selection rectangle coordinates
+        let newX = rectangle.x + 1;
+        if (newX + rectangle.width > originalImage.width) {
+            newX = originalImage.width - rectangle.width;
+        }
+        drawingItem.selectRectangle.x0 = newX;
+        drawingItem.selectRectangle.x1 = newX + rectangle.width - 1;
 
         let message = `move right x: ${rectangle.x} y: ${rectangle.y} width: ${rectangle.width} height: ${rectangle.height}`;
         this.history.log(message, {
@@ -2561,6 +2577,14 @@ class PageController {
         let image = originalImage.moveUp(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
         let sameImage = image.isEqualTo(originalImage);
 
+        // Update selection rectangle coordinates
+        let newY = rectangle.y - 1;
+        if (newY < 0) {
+            newY = 0;
+        }
+        drawingItem.selectRectangle.y0 = newY;
+        drawingItem.selectRectangle.y1 = newY + rectangle.height - 1;
+
         let message = `move up x: ${rectangle.x} y: ${rectangle.y} width: ${rectangle.width} height: ${rectangle.height}`;
         this.history.log(message, {
             action: 'move up',
@@ -2592,6 +2616,14 @@ class PageController {
         let rectangle = this.getToolRectangle();
         let image = originalImage.moveDown(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
         let sameImage = image.isEqualTo(originalImage);
+
+        // Update selection rectangle coordinates
+        let newY = rectangle.y + 1;
+        if (newY + rectangle.height > originalImage.height) {
+            newY = originalImage.height - rectangle.height;
+        }
+        drawingItem.selectRectangle.y0 = newY;
+        drawingItem.selectRectangle.y1 = newY + rectangle.height - 1;
 
         let message = `move down x: ${rectangle.x} y: ${rectangle.y} width: ${rectangle.width} height: ${rectangle.height}`;
         this.history.log(message, {

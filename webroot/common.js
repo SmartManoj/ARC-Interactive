@@ -607,50 +607,126 @@ class ARCImage {
     
     // Move the content to the left inside the rectangle, wrap around when reaching the left edge.
     moveLeft(x, y, width, height) {
-        var image3 = this.clone();
-        if (width >= 2) {
-            let image0 = this.crop(x, y, 1, height);
-            let image1 = this.crop(x + 1, y, width - 1, height);
-            let image2 = this.overlay(image1, x, y);
-            image3 = image2.overlay(image0, x + width - 1, y);
+        if (width < 1) return this.clone();
+        
+        // Create a temporary image with the original pixels
+        let tempPixels = [];
+        for (let i = 0; i < this.height; i++) {
+            tempPixels.push(this.pixels[i].slice());
         }
-        return image3;
+        let tempImage = new ARCImage(tempPixels);
+        
+        // Clear the original area
+        for (let i = y; i < y + height; i++) {
+            for (let j = x; j < x + width; j++) {
+                tempPixels[i][j] = 0;
+            }
+        }
+        
+        // Crop the selected region
+        let cropImage = this.crop(x, y, width, height);
+        
+        // Overlay at the new position, which may be outside the original boundaries
+        let newX = x - 1;
+        if (newX < 0) {
+            // If moving outside left boundary, keep the content at x=0
+            newX = 0;
+        }
+        
+        return tempImage.overlay(cropImage, newX, y);
     }
     
     // Move the content to the right inside the rectangle, wrap around when reaching the right edge.
     moveRight(x, y, width, height) {
-        var image3 = this.clone();
-        if (width >= 2) {
-            let image0 = this.crop(x + width - 1, y, 1, height);
-            let image1 = this.crop(x, y, width - 1, height);
-            let image2 = this.overlay(image1, x + 1, y);
-            image3 = image2.overlay(image0, x, y);
+        if (width < 1) return this.clone();
+        
+        // Create a temporary image with the original pixels
+        let tempPixels = [];
+        for (let i = 0; i < this.height; i++) {
+            tempPixels.push(this.pixels[i].slice());
         }
-        return image3;
+        let tempImage = new ARCImage(tempPixels);
+        
+        // Clear the original area
+        for (let i = y; i < y + height; i++) {
+            for (let j = x; j < x + width; j++) {
+                tempPixels[i][j] = 0;
+            }
+        }
+        
+        // Crop the selected region
+        let cropImage = this.crop(x, y, width, height);
+        
+        // Overlay at the new position, which may be outside the original boundaries
+        let newX = x + 1;
+        if (newX + width > this.width) {
+            // If moving outside right boundary, keep the content at rightmost position
+            newX = this.width - width;
+        }
+        
+        return tempImage.overlay(cropImage, newX, y);
     }
     
-    // Move the content to the up inside the rectangle, wrap around when reaching the top edge.
+    // Move the content up inside the rectangle, wrap around when reaching the top edge.
     moveUp(x, y, width, height) {
-        var image3 = this.clone();
-        if (height >= 2) {
-            let image0 = this.crop(x, y, width, 1);
-            let image1 = this.crop(x, y + 1, width, height - 1);
-            let image2 = this.overlay(image1, x, y);
-            image3 = image2.overlay(image0, x, y + height - 1);
+        if (height < 1) return this.clone();
+        
+        // Create a temporary image with the original pixels
+        let tempPixels = [];
+        for (let i = 0; i < this.height; i++) {
+            tempPixels.push(this.pixels[i].slice());
         }
-        return image3;
+        let tempImage = new ARCImage(tempPixels);
+        
+        // Clear the original area
+        for (let i = y; i < y + height; i++) {
+            for (let j = x; j < x + width; j++) {
+                tempPixels[i][j] = 0;
+            }
+        }
+        
+        // Crop the selected region
+        let cropImage = this.crop(x, y, width, height);
+        
+        // Overlay at the new position, which may be outside the original boundaries
+        let newY = y - 1;
+        if (newY < 0) {
+            // If moving outside top boundary, keep the content at y=0
+            newY = 0;
+        }
+        
+        return tempImage.overlay(cropImage, x, newY);
     }
     
-    // Move the content to the down inside the rectangle, wrap around when reaching the bottom edge.
+    // Move the content down inside the rectangle, wrap around when reaching the bottom edge.
     moveDown(x, y, width, height) {
-        var image3 = this.clone();
-        if (height >= 2) {
-            let image0 = this.crop(x, y + height - 1, width, 1);
-            let image1 = this.crop(x, y, width, height - 1);
-            let image2 = this.overlay(image1, x, y + 1);
-            image3 = image2.overlay(image0, x, y);
+        if (height < 1) return this.clone();
+        
+        // Create a temporary image with the original pixels
+        let tempPixels = [];
+        for (let i = 0; i < this.height; i++) {
+            tempPixels.push(this.pixels[i].slice());
         }
-        return image3;
+        let tempImage = new ARCImage(tempPixels);
+        
+        // Clear the original area
+        for (let i = y; i < y + height; i++) {
+            for (let j = x; j < x + width; j++) {
+                tempPixels[i][j] = 0;
+            }
+        }
+        
+        // Crop the selected region
+        let cropImage = this.crop(x, y, width, height);
+        
+        // Overlay at the new position, which may be outside the original boundaries
+        let newY = y + 1;
+        if (newY + height > this.height) {
+            // If moving outside bottom boundary, keep the content at bottommost position
+            newY = this.height - height;
+        }
+        
+        return tempImage.overlay(cropImage, x, newY);
     }
 }
 
