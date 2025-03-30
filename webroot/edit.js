@@ -122,6 +122,7 @@ class DrawingItem {
         this.submitCorrectCount = 0;
         this.submitIncorrectCount = 0;
         this.startOverCount = 0;
+        this.targetColor = null; // Color of the selected object
     }
 
     getSelectedRectangleCoordinates() {
@@ -847,7 +848,8 @@ class PageController {
         
         // If a single cell is selected and it's not empty (color != 0)
         if (originalImage.pixels[y][x] !== 0) {
-            // Expand selection to include all connected pixels of the same color
+            // Store the target color and expand selection to include all connected pixels of the same color
+            drawingItem.targetColor = originalImage.pixels[y][x];
             let { minX, maxX, minY, maxY } = this.expandSelectionToObject(originalImage, x, y);
             drawingItem.selectRectangle.x0 = minX;
             drawingItem.selectRectangle.y0 = minY;
@@ -855,6 +857,7 @@ class PageController {
             drawingItem.selectRectangle.y1 = maxY;
         } else {
             // Normal single-cell selection
+            drawingItem.targetColor = null;
             drawingItem.selectRectangle.x0 = x;
             drawingItem.selectRectangle.y0 = y;
             drawingItem.selectRectangle.x1 = x;
@@ -877,6 +880,7 @@ class PageController {
             selectY: minY,
             selectWidth: selectWidth,
             selectHeight: selectHeight,
+            targetColor: drawingItem.targetColor
         });
     }
 
@@ -2532,8 +2536,28 @@ class PageController {
         let historyImageHandle = drawingItem.getHistoryImageHandle();
         let originalImage = drawingItem.originator.getImageClone();
         let rectangle = this.getToolRectangle();
-        let image = originalImage.moveLeft(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
-        let sameImage = image.isEqualTo(originalImage);
+        
+        // If we have a target color, only move pixels of that color
+        if (drawingItem.targetColor !== null) {
+            let image = originalImage.clone();
+            for (let y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
+                for (let x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
+                    if (image.pixels[y][x] === drawingItem.targetColor) {
+                        let newX = x - 1;
+                        if (newX < 0) newX = image.width - 1;
+                        image.pixels[y][newX] = drawingItem.targetColor;
+                        image.pixels[y][x] = 0;
+                    }
+                }
+            }
+            drawingItem.caretaker.saveState(drawingItem.originator, `move left (color ${drawingItem.targetColor})`);
+            drawingItem.originator.setImage(image);
+        } else {
+            // Original behavior for non-color selection
+            let image = originalImage.moveLeft(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
+            drawingItem.caretaker.saveState(drawingItem.originator, 'move left');
+            drawingItem.originator.setImage(image);
+        }
 
         // Update selection rectangle coordinates
         let newX = rectangle.x - 1;
@@ -2543,25 +2567,6 @@ class PageController {
         drawingItem.selectRectangle.x0 = newX;
         drawingItem.selectRectangle.x1 = newX + rectangle.width - 1;
 
-        let message = `move left x: ${rectangle.x} y: ${rectangle.y} width: ${rectangle.width} height: ${rectangle.height}`;
-        this.history.log(message, {
-            action: 'move left',
-            imageHandle: historyImageHandle,
-            sameImage: sameImage,
-            x: rectangle.x,
-            y: rectangle.y,
-            width: rectangle.width,
-            height: rectangle.height,
-            image: image.pixels,
-        });
-
-        if (sameImage) {
-            console.log('The image is the same after the move.');
-            this.hideToolPanel();
-            return;
-        }
-        drawingItem.caretaker.saveState(drawingItem.originator, message);
-        drawingItem.originator.setImage(image);
         this.updateDrawCanvas();
         this.hideToolPanel();
     }
@@ -2572,8 +2577,28 @@ class PageController {
         let historyImageHandle = drawingItem.getHistoryImageHandle();
         let originalImage = drawingItem.originator.getImageClone();
         let rectangle = this.getToolRectangle();
-        let image = originalImage.moveRight(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
-        let sameImage = image.isEqualTo(originalImage);
+        
+        // If we have a target color, only move pixels of that color
+        if (drawingItem.targetColor !== null) {
+            let image = originalImage.clone();
+            for (let y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
+                for (let x = rectangle.x + rectangle.width - 1; x >= rectangle.x; x--) {
+                    if (image.pixels[y][x] === drawingItem.targetColor) {
+                        let newX = x + 1;
+                        if (newX >= image.width) newX = 0;
+                        image.pixels[y][newX] = drawingItem.targetColor;
+                        image.pixels[y][x] = 0;
+                    }
+                }
+            }
+            drawingItem.caretaker.saveState(drawingItem.originator, `move right (color ${drawingItem.targetColor})`);
+            drawingItem.originator.setImage(image);
+        } else {
+            // Original behavior for non-color selection
+            let image = originalImage.moveRight(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
+            drawingItem.caretaker.saveState(drawingItem.originator, 'move right');
+            drawingItem.originator.setImage(image);
+        }
 
         // Update selection rectangle coordinates
         let newX = rectangle.x + 1;
@@ -2583,25 +2608,6 @@ class PageController {
         drawingItem.selectRectangle.x0 = newX;
         drawingItem.selectRectangle.x1 = newX + rectangle.width - 1;
 
-        let message = `move right x: ${rectangle.x} y: ${rectangle.y} width: ${rectangle.width} height: ${rectangle.height}`;
-        this.history.log(message, {
-            action: 'move right',
-            imageHandle: historyImageHandle,
-            sameImage: sameImage,
-            x: rectangle.x,
-            y: rectangle.y,
-            width: rectangle.width,
-            height: rectangle.height,
-            image: image.pixels,
-        });
-
-        if (sameImage) {
-            console.log('The image is the same after the move.');
-            this.hideToolPanel();
-            return;
-        }
-        drawingItem.caretaker.saveState(drawingItem.originator, message);
-        drawingItem.originator.setImage(image);
         this.updateDrawCanvas();
         this.hideToolPanel();
     }
@@ -2612,8 +2618,28 @@ class PageController {
         let historyImageHandle = drawingItem.getHistoryImageHandle();
         let originalImage = drawingItem.originator.getImageClone();
         let rectangle = this.getToolRectangle();
-        let image = originalImage.moveUp(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
-        let sameImage = image.isEqualTo(originalImage);
+        
+        // If we have a target color, only move pixels of that color
+        if (drawingItem.targetColor !== null) {
+            let image = originalImage.clone();
+            for (let x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
+                for (let y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
+                    if (image.pixels[y][x] === drawingItem.targetColor) {
+                        let newY = y - 1;
+                        if (newY < 0) newY = image.height - 1;
+                        image.pixels[newY][x] = drawingItem.targetColor;
+                        image.pixels[y][x] = 0;
+                    }
+                }
+            }
+            drawingItem.caretaker.saveState(drawingItem.originator, `move up (color ${drawingItem.targetColor})`);
+            drawingItem.originator.setImage(image);
+        } else {
+            // Original behavior for non-color selection
+            let image = originalImage.moveUp(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
+            drawingItem.caretaker.saveState(drawingItem.originator, 'move up');
+            drawingItem.originator.setImage(image);
+        }
 
         // Update selection rectangle coordinates
         let newY = rectangle.y - 1;
@@ -2623,25 +2649,6 @@ class PageController {
         drawingItem.selectRectangle.y0 = newY;
         drawingItem.selectRectangle.y1 = newY + rectangle.height - 1;
 
-        let message = `move up x: ${rectangle.x} y: ${rectangle.y} width: ${rectangle.width} height: ${rectangle.height}`;
-        this.history.log(message, {
-            action: 'move up',
-            imageHandle: historyImageHandle,
-            sameImage: sameImage,
-            x: rectangle.x,
-            y: rectangle.y,
-            width: rectangle.width,
-            height: rectangle.height,
-            image: image.pixels,
-        });
-
-        if (sameImage) {
-            console.log('The image is the same after the move.');
-            this.hideToolPanel();
-            return;
-        }
-        drawingItem.caretaker.saveState(drawingItem.originator, message);
-        drawingItem.originator.setImage(image);
         this.updateDrawCanvas();
         this.hideToolPanel();
     }
@@ -2652,8 +2659,28 @@ class PageController {
         let historyImageHandle = drawingItem.getHistoryImageHandle();
         let originalImage = drawingItem.originator.getImageClone();
         let rectangle = this.getToolRectangle();
-        let image = originalImage.moveDown(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
-        let sameImage = image.isEqualTo(originalImage);
+        
+        // If we have a target color, only move pixels of that color
+        if (drawingItem.targetColor !== null) {
+            let image = originalImage.clone();
+            for (let x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
+                for (let y = rectangle.y + rectangle.height - 1; y >= rectangle.y; y--) {
+                    if (image.pixels[y][x] === drawingItem.targetColor) {
+                        let newY = y + 1;
+                        if (newY >= image.height) newY = 0;
+                        image.pixels[newY][x] = drawingItem.targetColor;
+                        image.pixels[y][x] = 0;
+                    }
+                }
+            }
+            drawingItem.caretaker.saveState(drawingItem.originator, `move down (color ${drawingItem.targetColor})`);
+            drawingItem.originator.setImage(image);
+        } else {
+            // Original behavior for non-color selection
+            let image = originalImage.moveDown(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
+            drawingItem.caretaker.saveState(drawingItem.originator, 'move down');
+            drawingItem.originator.setImage(image);
+        }
 
         // Update selection rectangle coordinates
         let newY = rectangle.y + 1;
@@ -2663,25 +2690,6 @@ class PageController {
         drawingItem.selectRectangle.y0 = newY;
         drawingItem.selectRectangle.y1 = newY + rectangle.height - 1;
 
-        let message = `move down x: ${rectangle.x} y: ${rectangle.y} width: ${rectangle.width} height: ${rectangle.height}`;
-        this.history.log(message, {
-            action: 'move down',
-            imageHandle: historyImageHandle,
-            sameImage: sameImage,
-            x: rectangle.x,
-            y: rectangle.y,
-            width: rectangle.width,
-            height: rectangle.height,
-            image: image.pixels,
-        });
-
-        if (sameImage) {
-            console.log('The image is the same after the move.');
-            this.hideToolPanel();
-            return;
-        }
-        drawingItem.caretaker.saveState(drawingItem.originator, message);
-        drawingItem.originator.setImage(image);
         this.updateDrawCanvas();
         this.hideToolPanel();
     }
