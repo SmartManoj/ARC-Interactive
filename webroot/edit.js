@@ -2391,9 +2391,19 @@ class PageController {
             });
             return;
         }
+
+        // First clear the selected area
+        let image = originalImage.clone();
+        for (let x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
+            for (let y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
+                image.pixels[y][x] = 0;
+            }
+        }
+
+        // Then apply rotation
         let cropImage = originalImage.crop(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
         let rotatedImage = cropImage.rotateCW();
-        let image = originalImage.overlay(rotatedImage, rectangle.x, rectangle.y);
+        image = image.overlay(rotatedImage, rectangle.x, rectangle.y);
         let sameImage = image.isEqualTo(originalImage);
 
         let message = `rotate selection clockwise, x: ${rectangle.x} y: ${rectangle.y} width: ${rectangle.width} height: ${rectangle.height}`;
@@ -2476,9 +2486,19 @@ class PageController {
             });
             return;
         }
+
+        // First clear the selected area
+        let image = originalImage.clone();
+        for (let x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
+            for (let y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
+                image.pixels[y][x] = 0;
+            }
+        }
+
+        // Then apply rotation
         let cropImage = originalImage.crop(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
         let rotatedImage = cropImage.rotateCCW();
-        let image = originalImage.overlay(rotatedImage, rectangle.x, rectangle.y);
+        image = image.overlay(rotatedImage, rectangle.x, rectangle.y);
         let sameImage = image.isEqualTo(originalImage);
 
         let message = `rotate selection counter-clockwise, x: ${rectangle.x} y: ${rectangle.y} width: ${rectangle.width} height: ${rectangle.height}`;
