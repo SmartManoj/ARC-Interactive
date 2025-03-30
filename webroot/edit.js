@@ -507,7 +507,8 @@ class PageController {
                 this.moveRight();
             }
             if (event.code === 'KeyX') {
-                this.flipX();
+                this.copyToClipboard();
+                this.clearSelection();
             }
             if (event.code === 'KeyY') {
                 this.flipY();
@@ -3085,6 +3086,40 @@ class PageController {
                 trainCount: state.trainCount,
             });
         }
+    }
+
+    clearSelection() {
+        let drawingItem = this.currentDrawingItem();
+        let historyImageHandle = drawingItem.getHistoryImageHandle();
+        let originalImage = drawingItem.originator.getImageClone();
+        let rectangle = this.getToolRectangle();
+        
+        // If we have a target color, only clear pixels of that color
+        if (drawingItem.targetColor !== null) {
+            let image = originalImage.clone();
+            for (let x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
+                for (let y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
+                    if (image.pixels[y][x] === drawingItem.targetColor) {
+                        image.pixels[y][x] = 0;
+                    }
+                }
+            }
+            drawingItem.caretaker.saveState(drawingItem.originator, `clear selection (color ${drawingItem.targetColor})`);
+            drawingItem.originator.setImage(image);
+        } else {
+            // Clear all pixels in the selection
+            let image = originalImage.clone();
+            for (let x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
+                for (let y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
+                    image.pixels[y][x] = 0;
+                }
+            }
+            drawingItem.caretaker.saveState(drawingItem.originator, 'clear selection');
+            drawingItem.originator.setImage(image);
+        }
+
+        this.updateDrawCanvas();
+        this.hideToolPanel();
     }
 }
 
