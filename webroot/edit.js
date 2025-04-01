@@ -852,6 +852,7 @@ class PageController {
             // Store the target color and expand selection to include all connected pixels of the same color
             drawingItem.targetColor = originalImage.pixels[y][x];
             let { minX, maxX, minY, maxY } = this.expandSelectionToObject(originalImage, x, y);
+            console.log('expandSelectionToObject output', `(${minX}, ${minY})`, `(${maxX}, ${maxY})`);
             drawingItem.selectRectangle.x0 = minX;
             drawingItem.selectRectangle.y0 = minY;
             drawingItem.selectRectangle.x1 = maxX;
