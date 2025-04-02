@@ -472,6 +472,9 @@ class PageController {
                     this.undoAction();
                 }
             }
+            if (event.code === 'KeyX') {
+                this.cutToClipboard();
+            }
             if (event.code === 'KeyC') {
                 this.copyToClipboard();
             }
@@ -505,10 +508,6 @@ class PageController {
             }
             if (event.code === 'ArrowRight') {
                 this.moveRight();
-            }
-            if (event.code === 'KeyX') {
-                this.copyToClipboard();
-                this.clearSelection();
             }
             if (event.code === 'KeyY') {
                 this.flipY();
@@ -2094,6 +2093,11 @@ class PageController {
         drawingItem.originator.setImage(image);
         drawingItem.assignSelectRectangleFromCurrentImage();
         this.updateDrawCanvas();
+        this.hideToolPanel();
+    }
+    cutToClipboard() {
+        this.copyToClipboard();
+        this.clearSelection();
         this.hideToolPanel();
     }
 
